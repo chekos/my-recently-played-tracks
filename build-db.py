@@ -112,7 +112,7 @@ def build_tracks_dataframe(tracks_played):
 
 tracks_holder = build_tracks_dataframe(tracks_played)
 data = pd.DataFrame(tracks_holder).drop_duplicates().sort_values(by="played_at")
-data.to_csv("markdown/tracks.csv", index=False, encoding="utf-8")
+data.to_csv("tracks.csv", index=False, encoding="utf-8")
 data["artists"] = data["track_artists"].str.split(" & ")
 data = data.explode("artists")
-data.to_csv("markdown/tracks_long.csv", index=False, encoding="utf-8")
+data.to_csv("tracks_long.csv", index=False, encoding="utf-8")
