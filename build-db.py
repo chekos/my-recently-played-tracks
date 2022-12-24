@@ -1,10 +1,16 @@
+import json 
+from pathlib import Path 
+
+import git 
+import pandas as pd
+from rich.progress import track as track_progress
+from rich import print
+
 from pathlib import Path
 import git
 
 import pandas as pd
 import json
-
-repo_path = Path("./spotify-git-scraping/").resolve()
 
 # from git-history src code
 def iterate_file_versions(
@@ -22,7 +28,7 @@ def iterate_file_versions(
         pass
 
     commits = reversed(list(repo.iter_commits(ref)))
-    for commit in commits:
+    for commit in track_progress(commits, description = "Processing commits..."):
         try:
             for tree in commit.tree.trees:
                 for blobs in tree.blobs:
@@ -33,16 +39,17 @@ def iterate_file_versions(
             # This commit doesn't have a copy of the requested file
             pass
 
-def get_file_versions(repo_path=repo_path, filename="recently_played.json"):
+
+def get_file_versions(repo_path, filename):
     full_file = [
-      json.loads(file)
-      for file in list(iterate_file_versions(repo_path, "recently_played.json"))
+        json.loads(file) for file in list(iterate_file_versions(repo_path, filename))
     ]
     return full_file
 
+
 def build_tracks_dataframe(tracks_played):
     tracks_holder = []
-    for item in tracks_played:
+    for item in track_progress(tracks_played, description = "Building dataframe..."):
         current_item = {}
         current_item["played_at"] = item["played_at"]
 
@@ -92,7 +99,9 @@ def build_tracks_dataframe(tracks_played):
             url = image["url"]
             current_item[f"album_image_{height}x{width}_url"] = url
         album_artist = album["artists"][0]
-        current_item["album_artist_spotify_url"] = album_artist["external_urls"]["spotify"]
+        current_item["album_artist_spotify_url"] = album_artist["external_urls"][
+            "spotify"
+        ]
         current_item["album_artist_href"] = album_artist["href"]
         current_item["album_artist_id"] = album_artist["id"]
         current_item["album_artist_name"] = album_artist["name"]
@@ -105,17 +114,29 @@ def build_tracks_dataframe(tracks_played):
     return tracks_holder
 
 
-if __name__=="__main__":
+def build_tracks_csv(tracks_played, include_long=True):
+    tracks_holder = build_tracks_dataframe(tracks_played)
+    data = pd.DataFrame(tracks_holder).drop_duplicates().sort_values(by="played_at")
+    print("Writing ./tracks.csv")
+    data.to_csv("tracks.csv", index=False, encoding="utf-8")
+    if include_long:
+        print("Writing ./tracks_long.csv")
+        data["artists"] = data["track_artists"].str.split(" & ")
+        data = data.explode("artists")
+        data.to_csv("tracks_long.csv", index=False, encoding="utf-8")
+
+
+def get_tracks_played():
     repo_path = Path("./spotify-git-scraping/").resolve()
     recently_played_jsons = get_file_versions(repo_path, "recently_played.json")
     tracks_played = []
-    for item in recently_played_jsons:
+    for item in track_progress(recently_played_jsons, description="Processing tracks_played..."):
         items = item["items"]
         if len(items) > 0:
             tracks_played.extend(items)
-    tracks_holder = build_tracks_dataframe(tracks_played)
-    data = pd.DataFrame(tracks_holder)
-    data.to_csv("tracks.csv", index = False, encoding = "utf-8")
-    data["artists"] = data["track_artists"].str.split(" & ")
-    data = data.explode("artists")
-    data.to_csv("tracks_long.csv", index = False, encoding = "utf-8")
+    return tracks_played
+
+
+if __name__ == "__main__":
+    tracks_played = get_tracks_played()
+    build_tracks_csv(tracks_played)
