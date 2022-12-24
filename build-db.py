@@ -40,12 +40,6 @@ def get_file_versions(repo_path=repo_path, filename="recently_played.json"):
     ]
     return full_file
 
-recently_played_jsons = get_file_versions(filename="recently_played.json")
-
-tracks_played = []
-for item in recently_played_jsons:
-    if len(item["items"]) > 0:
-        tracks_played.extend(item["items"])
 def build_tracks_dataframe(tracks_played):
     tracks_holder = []
     for item in tracks_played:
@@ -110,9 +104,18 @@ def build_tracks_dataframe(tracks_played):
         tracks_holder.append(current_item)
     return tracks_holder
 
-tracks_holder = build_tracks_dataframe(tracks_played)
-data = pd.DataFrame(tracks_holder).drop_duplicates().sort_values(by="played_at")
-data.to_csv("tracks.csv", index=False, encoding="utf-8")
-data["artists"] = data["track_artists"].str.split(" & ")
-data = data.explode("artists")
-data.to_csv("tracks_long.csv", index=False, encoding="utf-8")
+
+if __name__="__main__":
+    repo_path = Path("./spotify-git-scraping/").resolve()
+    recently_played_jsons = get_file_versions(repo_path, "recently_played.json")
+    tracks_played = []
+    for item in recently_played_jsons:
+        items = item["items"]
+        if len(items) > 0:
+            tracks_played.extend(items)
+    tracks_holder = build_tracks_dataframe(tracks_played)
+    data = pd.DataFrame(tracks_holder)
+    data.to_csv("tracks.csv", index = False, encoding = "utf-8")
+    data["artists"] = data["track_artists"].str.split(" & ")
+    data = data.explode("artists")
+    data.to_csv("tracks_long.csv", index = False, encoding = "utf-8")
