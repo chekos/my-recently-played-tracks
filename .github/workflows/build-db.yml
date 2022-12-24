@@ -20,7 +20,7 @@ jobs:
       run: |-
         pip install -r requirements.txt
     - run: git clone https://github.com/chekos/spotify-git-scraping
-    - run: python3 build_db.py
+    - run: python3 build-db.py
     - run: rm -rf spotify-git-scraping
     - name: Build db
       run: |-
