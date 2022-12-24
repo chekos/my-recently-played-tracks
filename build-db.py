@@ -105,7 +105,7 @@ def build_tracks_dataframe(tracks_played):
     return tracks_holder
 
 
-if __name__="__main__":
+if __name__=="__main__":
     repo_path = Path("./spotify-git-scraping/").resolve()
     recently_played_jsons = get_file_versions(repo_path, "recently_played.json")
     tracks_played = []
