@@ -24,7 +24,7 @@ jobs:
     - run: rm -rf spotify-git-scraping
     - name: Build db
       run: |-
-        csvs-to-sqlite markdown/tracks.csv tracks.db --replace-tables
+        csvs-to-sqlite tracks.csv tracks.db --replace-tables
         sqlite-utils enable-fts tracks.db tracks track_artists track_name album_name album_artist_name --replace
     - name: Commit and push if it changed 
       run: |-
