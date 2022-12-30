@@ -1,0 +1,29 @@
+name: Only keep data for the top 5 artists
+
+on:
+  schedule:
+    - cron: '28 */8 * * *'
+  workflow_dispatch:
+
+jobs:
+  build-json:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v3
+    - name: Build json
+      run: |-
+        cat tracks.json | jq 'map(select(any(.track.album.artists[]; .name == "Aleman" or .name == "La Banda Baston" or .name == "Fntxy" or .name == "La Plebada" or .name == "Yoga Fire")))' > top5ArtistsTracks.json
+    - name: Commit and push if it changed 
+      run: |-
+        git config user.name "Automated"
+        git config user.email "actions@users.noreply.github.com"
+        git add -A
+        timestamp=$(date -u)
+        git commit -m "Latest data: ${timestamp}" || exit 0
+        echo '### Changed files' >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        git show --name-only --format=tformat: >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        git pull --rebase
+        git push
