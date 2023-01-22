@@ -1,8 +1,10 @@
 name: Only keep data for the top 5 artists
 
 on:
-  schedule:
-    - cron: '28 */8 * * *'
+  workflow_run:
+    workflows: [Build csv and SQLite db]
+    types: 
+      - completed
   workflow_dispatch:
 
 jobs:
