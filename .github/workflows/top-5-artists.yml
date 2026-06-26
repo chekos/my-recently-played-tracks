@@ -1,10 +1,6 @@
 name: Only keep data for the top 5 artists
 
 on:
-  workflow_run:
-    workflows: [Build csv and SQLite db]
-    types: 
-      - completed
   workflow_dispatch:
 
 jobs:
